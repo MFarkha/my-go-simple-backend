@@ -3,16 +3,15 @@ FROM golang:1.22 AS builder
 
 WORKDIR /app
 
-# Copy the Go module files and download dependencies
+# # Copy the Go module files and download dependencies
 COPY go.mod ./
 RUN go mod download
 
 # Copy the source code into the container
-COPY . .
+COPY main.go .
 
-# Build the Go binary
-# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-RUN go build -o microservice .
+# Build the Go binary - with statically linked library to run on Alpine Linux
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o microservice .
 
 # Stage 2: Create a minimal image to run the binary
 FROM alpine:3.19
@@ -35,5 +34,4 @@ USER appuser
 
 EXPOSE 3000
 
-# Command to run the binary
-CMD ["./microservice"]
+ENTRYPOINT ["./microservice"]
