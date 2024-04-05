@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-deploy
+spec:
+  replicas: 3  # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: microservice
+  template:
+    metadata:
+      labels:
+        app: microservice
+    spec:
+      containers:
+      - name: microservice
+        image: famaten/my-test-task  # docker image from my personal docker hub registry
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "64Mi"   # Request 64 megabytes of memory
+            cpu: "250m"      # Request 250 milliCPU units (0.25 CPU cores)
+          limits:
+            memory: "128Mi"  # Limit to 128 megabytes of memory
+            cpu: "500m" 
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3          
+        readinessProbe:  
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microservice-svc
+spec:
+  selector:
+    app: microservice
+  ports:
+    - protocol: TCP
+      port: 3000  # Exposed port on the service
+      targetPort: 3000
+  type: LoadBalancer

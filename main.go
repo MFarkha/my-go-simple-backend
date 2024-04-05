@@ -40,7 +40,7 @@ func main() {
 	http.HandleFunc("/ready", handleReady)
 	http.HandleFunc("/payload", handlePayload)
 	http.HandleFunc("/metrics", handleMetrics)
-	log.Printf("The microservice is listening on %s\n", bind)
+	log.Printf("The microservice version 2 is listening on %s\n", bind)
 	err := http.ListenAndServe(bind, nil)
 	if err != nil {
 		log.Fatalf("The microservice failure to bind: %v, error: %v", bind, err)
