@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: microservice-deploy
 spec:
-  replicas: 3  # Adjust the number of replicas as needed
+  replicas: 3 # Adjust the number of replicas as needed
   selector:
     matchLabels:
       app: microservice
@@ -13,31 +13,31 @@ spec:
         app: microservice
     spec:
       containers:
-      - name: microservice
-        image: famaten/my-test-task  # docker image from my personal docker hub registry
-        ports:
-        - containerPort: 3000
-        resources:
-          requests:
-            memory: "64Mi"   # Request 64 megabytes of memory
-            cpu: "250m"      # Request 250 milliCPU units (0.25 CPU cores)
-          limits:
-            memory: "128Mi"  # Limit to 128 megabytes of memory
-            cpu: "500m" 
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          failureThreshold: 3          
-        readinessProbe:  
-          httpGet:
-            path: /ready
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          failureThreshold: 3
+        - name: microservice
+          image: famaten/my-test-task # docker image from my personal docker hub registry
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "16Mi" # Request 64 megabytes of memory
+              cpu: "32m" # Request 32 milliCPU units to ensure horizontal autoscalling will work
+            limits:
+              memory: "32Mi"
+              cpu: "64m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
 
 ---
 apiVersion: v1
@@ -49,6 +49,28 @@ spec:
     app: microservice
   ports:
     - protocol: TCP
-      port: 3000  # Exposed port on the service
+      port: 3000 # Exposed port on the service
       targetPort: 3000
   type: LoadBalancer
+
+## kubernetes metrics server should be installed
+# https://github.com/kubernetes-sigs/metrics-server#readme
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: microservice
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: microservice-deploy
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

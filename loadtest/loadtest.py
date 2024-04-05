@@ -7,7 +7,7 @@ URL = "http://localhost:3000"
 NUM_REQUESTS = 100
 
 # Default timeout
-TIMEOUT = 5
+TIMEOUT = 3
 
 # Endpoint to hit
 endpoints = ["health", "ready", "payload", "metrics"]
@@ -18,21 +18,17 @@ for i in range(NUM_REQUESTS):
         url_endpoint = URL + "/" + endpoint
         try:
             response = requests.get(url_endpoint, timeout=TIMEOUT)
-            # Print response status code for each request
-            # print(f"Request {i+1}, EndPoint: {endpoint}, Status code - {response.status_code}")
-
         except requests.exceptions.RequestException as e:
             print(f"Error sending request {i+1} for the endpoint {endpoint}: {e}")
 
 # Print metrics summary
 try:
     response = requests.get(URL + "/metrics", timeout=TIMEOUT)
-    # print(response.json())
-    FORMAT_SPEC = "{:<15}"
+    FORMAT_SPEC = "{:<25}"
     header_line = FORMAT_SPEC.format("Endpoint")
     header_line += FORMAT_SPEC.format("RequestCount")
-    header_line += FORMAT_SPEC.format("TotalDuration")
-    header_line += FORMAT_SPEC.format("AverageLatency")
+    header_line += FORMAT_SPEC.format("TotalDuration(ms)")
+    header_line += FORMAT_SPEC.format("AverageLatency(ms)")
     print(header_line)
     metrics = response.json()
     for endpoint in metrics:
