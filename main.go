@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"time"
 )
 
 const (
-	MAX_RANDOM_NUMBER = 20
-	PORT              = 3000
+	MAX_RANDOM_NUMBER     = 20
+	PORT                  = 3000
+	METRIC_DECIMAL_PLACES = float64(1000) // rounding up to specific number of decimal places
 )
 
 type Payload struct {
@@ -20,27 +22,30 @@ type Payload struct {
 }
 
 type Metric struct {
-	RequestCount   int
-	TotalDuration  float64
-	AverageLatency float64
+	RequestCount   int64
+	TotalDuration  float64 // in milliseconds
+	AverageLatency float64 // in milliseconds
 }
 
 var metrics map[string]*Metric
 
 func main() {
 	bind := fmt.Sprintf(":%d", PORT)
+	// seeding random source
 	rand.New(rand.NewSource(time.Now().UnixNano()))
+	// metrics map
 	metrics = make(map[string]*Metric)
 	metrics["health"] = &Metric{0, 0.0, 0.0}
 	metrics["ready"] = &Metric{0, 0.0, 0.0}
 	metrics["payload"] = &Metric{0, 0.0, 0.0}
 	metrics["metrics"] = &Metric{0, 0.0, 0.0}
-
+	// handle functions
 	http.HandleFunc("/health", handleHealth)
 	http.HandleFunc("/ready", handleReady)
 	http.HandleFunc("/payload", handlePayload)
 	http.HandleFunc("/metrics", handleMetrics)
-	log.Printf("The microservice version 2 is listening on %s\n", bind)
+	// start server
+	log.Printf("The microservice is listening on %s\n", bind)
 	err := http.ListenAndServe(bind, nil)
 	if err != nil {
 		log.Fatalf("The microservice failure to bind: %v, error: %v", bind, err)
@@ -90,13 +95,21 @@ func handleMetrics(w http.ResponseWriter, req *http.Request) {
 }
 
 func updateMetric(m *Metric, start time.Time) {
-	duration := time.Since(start).Seconds()
+	// update duration
+	duration := time.Since(start).Seconds() * 1000 // milliseconds
 	m.TotalDuration += duration
+	// rounding up to DECIMAL_PLACES
+	m.TotalDuration = math.Round(m.TotalDuration*METRIC_DECIMAL_PLACES) / METRIC_DECIMAL_PLACES
+	// increase request counter
 	m.RequestCount++
+	// calculate average latency
 	m.AverageLatency = m.TotalDuration / float64(m.RequestCount)
+	// rounding up to DECIMAL_PLACES
+	m.AverageLatency = math.Round(m.AverageLatency*METRIC_DECIMAL_PLACES) / METRIC_DECIMAL_PLACES
 }
 
 func fibonacciDP(n int) []int {
+	// dynamic programming version of fibonacci calculation
 	seq := make([]int, n+2)
 	seq[0], seq[1] = 0, 1
 	for i := 2; i <= n; i++ {
