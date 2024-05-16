@@ -1,6 +1,13 @@
-## This is my solution for the DevOps/SRE Engineer Test Task
+## This is an example of a simple backend service (REST API) in Golang
 
-### My considerations and observations of the solution
+- it exposes 4 endpoints:
+  - `/payload` - returns a random Fibonacci sequence
+  - `/health`, `/ready` - aka 'healthcheck and readiness points'
+  - `/metrics` - provides a basic set of metrics per each endpoint (`RequestCount, TotalDuration(ms), AverageLatency(ms)`)
+- a simple load test script (written in Python) located at [loadtest](./loadtest/) directory
+- a simple Kubernetes manifest for a service at [kubernetes](./kubernetes/) directory
+
+### Key considerations
 
 - Security
   - The final Docker image runs by non-root user
@@ -48,7 +55,7 @@
 - update kubernetes deployment image: [Kubernetes rolling update strategy](https://kubernetes.io/docs/tutorials/kubernetes-basics/update/update-intro/)
   `kubectl set image deploy/microservice-deploy microservice=$IMAGE_PATH`
 
-## How to access the microservice
+### How to access the microservice
 
 - access using [minikube tunnel](https://minikube.sigs.k8s.io/docs/handbook/accessing/) (in a separate terminal window)
 - check _EXTERNAL-IP_
@@ -59,7 +66,7 @@
   - `curl http://EXTERNAL-IP:3000/payload`
   - `curl http://EXTERNAL-IP:3000/metrics`
 
-## Load Testing
+### Load Testing
 
 - create a new [python3 virtual env](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/)
   `python3 -m venv loadtest/.venv`

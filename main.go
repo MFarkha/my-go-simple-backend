@@ -7,13 +7,11 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
-)
 
-const (
-	MAX_RANDOM_NUMBER     = 20
-	PORT                  = 3000
-	METRIC_DECIMAL_PLACES = float64(1000) // rounding up to specific number of decimal places
+	"github.com/joho/godotenv"
 )
 
 type Payload struct {
@@ -28,8 +26,27 @@ type Metric struct {
 }
 
 var metrics map[string]*Metric
+var PORT, MAX_RANDOM_NUMBER int
+var METRIC_DECIMAL_PLACES float64
 
 func main() {
+	err := godotenv.Load()
+	if err != nil && os.Getenv("PORT") == "" { // if no .env file lookup for environment variables
+		log.Fatal("Error loading .env file")
+	}
+
+	PORT, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		log.Fatalf("PORT needs to be numeric: %v", err)
+	}
+	MAX_RANDOM_NUMBER, err = strconv.Atoi(os.Getenv("APP_MAX_RANDOM_NUMBER"))
+	if err != nil {
+		log.Fatalf("APP_MAX_RANDOM_NUMBER needs to be numeric: %v", err)
+	}
+	METRIC_DECIMAL_PLACES, err = strconv.ParseFloat(os.Getenv("APP_METRIC_DECIMAL_PLACES"), 64)
+	if err != nil {
+		log.Fatalf("APP_METRIC_DECIMAL_PLACES needs to be numeric: %v", err)
+	}
 	bind := fmt.Sprintf(":%d", PORT)
 	// seeding random source
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -46,7 +63,7 @@ func main() {
 	http.HandleFunc("/metrics", handleMetrics)
 	// start server
 	log.Printf("The microservice is listening on %s\n", bind)
-	err := http.ListenAndServe(bind, nil)
+	err = http.ListenAndServe(bind, nil)
 	if err != nil {
 		log.Fatalf("The microservice failure to bind: %v, error: %v", bind, err)
 	}
