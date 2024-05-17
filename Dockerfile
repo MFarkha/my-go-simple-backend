@@ -4,14 +4,15 @@ FROM golang:1.22 AS builder
 WORKDIR /app
 
 # # Copy the Go module files and download dependencies
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code into the container
-COPY main.go .
+COPY *.go .
 
 # Build the Go binary - with statically linked library to run on Alpine Linux
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o microservice .
+# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o microservice .
+RUN CGO_ENABLED=0 GOOS=linux go build -o microservice .
 
 # Stage 2: Create a minimal image to run the binary
 FROM alpine:3.19
@@ -24,7 +25,10 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /home/appuser
 
 # Copy the binary from the builder stage
-COPY --from=builder /app/microservice .
+COPY --from=builder /app/microservice ./
+
+# Copy the dotenv file
+COPY .env ./
 
 # Set ownership and permissions for the non-root user
 RUN chown appuser:appuser microservice && \
@@ -32,6 +36,13 @@ RUN chown appuser:appuser microservice && \
 
 USER appuser
 
-EXPOSE 3000
+# ARG PORT
+# ARG MAX_RANDOM_NUMBER
+# ARG METRIC_DECIMAL_PLACES
+
+# ENV PORT=${PORT} \
+#     APP_MAX_RANDOM_NUMBER=${MAX_RANDOM_NUMBER} \
+#     APP_METRIC_DECIMAL_PLACES=${METRIC_DECIMAL_PLACES}
+# EXPOSE ${PORT}
 
 ENTRYPOINT ["./microservice"]
