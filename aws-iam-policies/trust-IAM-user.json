@@ -1,0 +1,23 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AllowIamUserAssumeRole",
+			"Effect": "Allow",
+			"Principal": {
+				"AWS": "arn:aws:iam::146966035049:user/my-github-actions-user"
+			},
+			"Action": "sts:AssumeRole",
+			"Condition": {}
+		},
+		{
+			"Sid": "AllowPassSessionTagsAndTransitive",
+            "Effect": "Allow",
+			"Principal": {
+				"AWS": "arn:aws:iam::146966035049:user/my-github-actions-user"
+			},
+            "Action": "sts:TagSession",
+			"Condition": {}
+		}
+	]
+}
