@@ -1,0 +1,19 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AllowOIDCProviderAssumeRole",
+			"Effect": "Allow",
+			"Principal": {
+		        "Federated": "arn:aws:iam::146966035049:oidc-provider/token.actions.githubusercontent.com"
+			},
+			"Action": "sts:AssumeRole",
+			"Condition": {
+			"StringEquals": {
+				"token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+				"token.actions.githubusercontent.com:sub": "repo:MFarkha/my-go-simple-backend:environment:development"
+				}
+			}
+		}
+	]
+}
