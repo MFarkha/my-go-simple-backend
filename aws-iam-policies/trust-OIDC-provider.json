@@ -7,7 +7,7 @@
 			"Principal": {
 		        "Federated": "arn:aws:iam::146966035049:oidc-provider/token.actions.githubusercontent.com"
 			},
-			"Action": "sts:AssumeRole",
+			"Action": "sts:AssumeRoleWithWebIdentity",
 			"Condition": {
 			"StringEquals": {
 				"token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
