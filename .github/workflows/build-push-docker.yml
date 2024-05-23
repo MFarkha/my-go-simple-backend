@@ -39,3 +39,25 @@ jobs:
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ vars.REPOSITORY }}
+          IMAGE_TAG: ${{ github.ref_name }}
+          EC2_IP: ${{ vars.EC2_IP }}
+          EC2_USER: "ubuntu"
+          CONTAINER_NAME: "my-go-simple-backend"
+        run: |
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << 'EOF'
+            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $REGISTRY
+            docker pull $REGISTRY/$REPOSITORY:$IMAGE_TAG
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            docker run -d -p 80:3000 --name $CONTAINER_NAME $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          EOF
